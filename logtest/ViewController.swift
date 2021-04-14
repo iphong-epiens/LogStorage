@@ -33,20 +33,19 @@ class ViewController: UIViewController {
 //        }
         
        removeLoggerDir()
-      
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSZ"
-        
-        print(formatter.string(from: Date()))
-        self.saveLogToFile("\(formatter.string(from: Date())) log msg")
+
+        self.saveLogToFile("\(Date()) log msg")
        
+        uploadLogFile()
+    }
+    
+    func uploadLogFile() {
         guard let logMsgArr = FileManager.allRecordedLogData() else { return }
         
         print(logMsgArr[0])
         
         let pathArr = logMsgArr[0].path.split(separator: "/")
          let fileName = pathArr.last!
-        print("fileName", fileName)
         
         let storage = Storage.storage()
         let storageRef = storage.reference()
@@ -70,18 +69,17 @@ class ViewController: UIViewController {
                 let uploadTask = logFileRef.putFile(from: logFileDir, metadata: metaData) { metadata, error in
                   guard let metadata = metadata else {
                     // Uh-oh, an error occurred!
-                    print("1 Uh-oh, an error occurred!", error)
+                    print("metadata error occurred!", error)
                     return
                   }
-                   //Metadata contains file metadata such as size, content-type.
-                  let size = metadata.size
-                    
+  
                     print("metadata:",metadata)
-                  // You can also access to download URL after upload.
+
+                    // You can also access to download URL after upload.
                     logFileRef.downloadURL { (url, error) in
                     guard let downloadURL = url else {
                       // Uh-oh, an error occurred!
-                        print("2 Uh-oh, an error occurred!", error)
+                        print("download log file error occurred!", error)
 
                       return
                     }
@@ -128,7 +126,6 @@ class ViewController: UIViewController {
 //            }
 //          }
 //        }
-        
     }
     
     func removeLoggerDir() {
@@ -144,7 +141,6 @@ class ViewController: UIViewController {
     }
     
     func saveLogToFile(_ log: String) {
-        print(#function, log)
       guard let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first else { return }
       guard let writePath = NSURL(fileURLWithPath: path).appendingPathComponent("Logger") else { return }
       let fileManager = FileManager.default
@@ -156,9 +152,9 @@ class ViewController: UIViewController {
       let formatter = DateFormatter()
       formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSZ"
 
-        let versionAndBuild: String = "\(version)(\(build))"
+      let versionAndBuild: String = "\(version)(\(build))"
 
-      let file = writePath.appendingPathComponent("iOS \(appName)(\(Bundle.main.bundleIdentifier!) [ver. \(versionAndBuild)]) \(formatter.string(from: Date())).logger")
+      let file = writePath.appendingPathComponent("iOS \(appName)(\(Bundle.main.bundleIdentifier!) [ver. \(versionAndBuild)]) \(formatter.string(from: Date())).txt")
 
       print(file.path)
 
@@ -187,18 +183,6 @@ class ViewController: UIViewController {
 }
 
 extension FileManager {
-    func directoryExists(_ atPath: String) -> Bool {
-            var isDirectory: ObjCBool = false
-            let exists = FileManager.default.fileExists(atPath: atPath, isDirectory:&isDirectory)
-            return exists && isDirectory.boolValue
-        }
-    
-  class func directoryUrl() -> URL? {
-      let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-      return paths.first
-  }
-
-    
     class func logDirectoryUrl() -> URL? {
         guard let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first else { return  nil}
         guard let writePath = NSURL(fileURLWithPath: path).appendingPathComponent("Logger") else { return nil }
@@ -206,7 +190,6 @@ extension FileManager {
         return writePath
     }
    
-    
   class func allRecordedLogData() -> [URL]? {
      if let logfileUrl = FileManager.logDirectoryUrl() {
         do {
